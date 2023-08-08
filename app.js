@@ -9,8 +9,9 @@ app.use(express.json());
 
 app.post('/', async (req, res) => {
     let results = [];
-    
-    for (let i = 0; i < 3; ++i) {
+    let checker = []
+
+    for (let i = 0; i < req.body.images.length; ++i) {
         const test = fs.readFileSync(`images/${req.body.images[i]}`);
 
         const result = await fetch('https://cvi620computervision.cognitiveservices.azure.com/vision/v3.2/analyze?visualFeatures=Tags&language=en&model-version=latest', {
@@ -23,11 +24,10 @@ app.post('/', async (req, res) => {
         });
 
         results[i] = await result.json();
+        checker.push(true);
     }
 
-    let checker = [ true, true, true ];
-
-    for (let i = 0; i < 3; ++i) {
+    for (let i = 0; i < req.body.images.length; ++i) {
         results[i].tags.forEach((tag) => {
             if (tag.name.includes(req.body.thing) && tag.confidence > 0.70) {
                 checker[i] = false;
