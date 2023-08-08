@@ -1,43 +1,46 @@
-const express = require('express');
-const cors = require('cors');
-const fs = require('fs');
+const express = require("express");
+const cors = require("cors");
+const fs = require("fs");
 
 const app = express();
 app.use(cors());
 
 app.use(express.json());
 
-app.post('/', async (req, res) => {
-    let results = [];
-    let checker = []
+app.post("/", async (req, res) => {
+  let results = [];
+  let checker = [];
 
-    for (let i = 0; i < req.body.images.length; ++i) {
-        const test = fs.readFileSync(`images/${req.body.images[i]}`);
+  for (let i = 0; i < req.body.images.length; ++i) {
+    const test = fs.readFileSync(`images/${req.body.images[i]}`);
 
-        const result = await fetch('https://cvi620computervision.cognitiveservices.azure.com/vision/v3.2/analyze?visualFeatures=Tags&language=en&model-version=latest', {
-            method: 'POST',
-            headers: new Headers({
-                'Ocp-Apim-Subscription-Key' : 'deb863e511b04a11b475ad9f36add7b4',
-                'Content-Type' : 'application/octet-stream'
-            }),
-            body: test
-        });
+    const result = await fetch(
+      "https://cvi620computervision.cognitiveservices.azure.com/vision/v3.2/analyze?visualFeatures=Tags&language=en&model-version=latest",
+      {
+        method: "POST",
+        headers: new Headers({
+          "Ocp-Apim-Subscription-Key": "deb863e511b04a11b475ad9f36add7b4",
+          "Content-Type": "application/octet-stream",
+        }),
+        body: test,
+      }
+    );
 
-        results[i] = await result.json();
-        checker.push(true);
-    }
+    results[i] = await result.json();
+    checker.push(true);
+  }
 
-    for (let i = 0; i < req.body.images.length; ++i) {
-        results[i].tags.forEach((tag) => {
-            if (tag.name.includes(req.body.thing) && tag.confidence > 0.70) {
-                checker[i] = false;
-            }
-        })
-    }
+  for (let i = 0; i < req.body.images.length; ++i) {
+    results[i].tags.forEach((tag) => {
+      if (tag.name.includes(req.body.thing) && tag.confidence > 0.7) {
+        checker[i] = false;
+      }
+    });
+  }
 
-    return res.status(200).json({ robot : checker.includes(true) ? true : false });
+  return res.status(200).json({ robot: checker.includes(true) ? true : false });
 });
 
 app.listen(8080, () => {
-    console.log('Ready to check for robots on port ' + 8080);
+  console.log("Ready to check for robots on port " + 8080);
 });
